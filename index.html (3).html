@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XP Team Battle – English Class</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        game: {
+                            bg: '#F3F4F6',
+                            card: '#FFFFFF',
+                            primary: '#4F46E5',
+                            accent: '#F59E0B',
+                            success: '#10B981',
+                            danger: '#EF4444',
+                            sky: '#0EA5E9',
+                            purple: '#8B5CF6',
+                            pink: '#EC4899'
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F3F4F6;
+            background-image: radial-gradient(#E5E7EB 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+            color: #1F2937;
+        }
+
+        .game-title {
+            font-family: 'Fredoka', cursive;
+            letter-spacing: 0.5px;
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+        }
+
+        .card-shadow-lg {
+            box-shadow: 0 20px 30px -10px rgba(79, 70, 229, 0.12), 0 10px 15px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-bounce {
+            transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+        }
+        .btn-bounce:active {
+            transform: scale(0.93) translateY(2px);
+        }
+        .btn-bounce:hover {
+            transform: translateY(-2px);
+        }
+
+        .floating-xp {
+            position: absolute;
+            animation: floatUpAndFade 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            pointer-events: none;
+            font-family: 'Fredoka', cursive;
+            z-index: 50;
+        }
+
+        @keyframes floatUpAndFade {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, 0) scale(0.5);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -20px) scale(1.3);
+            }
+            80% {
+                opacity: 1;
+                transform: translate(-50%, -50px) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -70px) scale(0.8);
+            }
+        }
+
+        .badge-pulse {
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .top-1-card {
+            border: 3px solid #F59E0B;
+            background: linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 100%);
+        }
+
+        .top-2-card {
+            border: 2px solid #9CA3AF;
+            background: linear-gradient(135deg, #F9FAFB 0%, #FFFFFF 100%);
+        }
+
+        .top-3-card {
+            border: 2px solid #D97706;
+            background: linear-gradient(135deg, #FFF7ED 0%, #FFFFFF 100%);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Confetti Overlay Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Header Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('dashboard')">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md text-2xl font-bold">
+                    🎮
+                </div>
+                <div>
+                    <h1 class="game-title text-2xl sm:text-3xl font-extrabold text-slate-800 leading-tight">
+                        XP Team Battle
+                    </h1>
+                    <p class="text-xs font-semibold text-indigo-600 tracking-wider uppercase">English Class Edition</p>
+                </div>
+            </div>
+
+            <!-- Header Action Controls -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- Undo Button -->
+                <button id="undo-btn" onclick="undoLastAction()" title="Deshacer última acción de XP" class="btn-bounce hidden sm:flex items-center space-x-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold border border-slate-200">
+                    <span>↩️</span>
+                    <span class="hidden md:inline">Undo</span>
+                </button>
+
+                <!-- Sound Toggle -->
+                <button id="sound-btn" onclick="toggleSound()" class="btn-bounce flex items-center space-x-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-sm font-bold border border-indigo-200">
+                    <span id="sound-icon">🔊</span>
+                    <span id="sound-text" class="hidden sm:inline">Sound ON</span>
+                </button>
+
+                <!-- Projector Mode -->
+                <button id="projector-btn" onclick="openProjectorMode()" class="btn-bounce flex items-center space-x-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold shadow-sm">
+                    <span>📺</span>
+                    <span class="hidden md:inline">Projector</span>
+                </button>
+
+                <!-- Teacher Mode Toggle -->
+                <button onclick="openTeacherModal()" class="btn-bounce flex items-center space-x-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-bold shadow-sm">
+                    <span>⚙️️</span>
+                    <span class="hidden md:inline">Teacher Mode</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="space-y-6">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-3xl p-6 sm:p-10 text-white card-shadow-lg relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl">
+                    <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold tracking-wide uppercase">🏆 Class Dashboard</span>
+                    <h2 class="game-title text-3xl sm:text-5xl font-extrabold mt-3 mb-2">Welcome, Champion Teacher!</h2>
+                    <p class="text-indigo-100 text-sm sm:text-base font-medium">Select a group below to start earning XP, leveling up teams, and boosting English engagement!</p>
+                </div>
+                <div class="absolute -right-8 -bottom-10 text-9xl opacity-20 select-none pointer-events-none">
+                    ⭐
+                </div>
+            </div>
+
+            <!-- Groups Section Header -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4">
+                <div>
+                    <h3 class="game-title text-2xl font-bold text-slate-800">Available Groups & Semesters</h3>
+                    <p class="text-slate-500 text-sm">Select a group leaderboard or add a new class.</p>
+                </div>
+                <button onclick="openAddGroupModal()" class="btn-bounce px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center space-x-2 text-sm sm:text-base">
+                    <span>➕</span>
+                    <span>ADD NEW GROUP</span>
+                </button>
+            </div>
+
+            <!-- Groups Grid -->
+            <div id="groups-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Group cards will be rendered here dynamically -->
+            </div>
+        </div>
+
+
+        <!-- LEADERBOARD VIEW -->
+        <div id="view-leaderboard" class="hidden space-y-6">
+            <!-- Group Header Bar -->
+            <div class="bg-white rounded-3xl p-6 card-shadow border border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="navigateTo('dashboard')" class="btn-bounce p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-lg" title="Volver al Dashboard">
+                        ⬅️
+                    </button>
+                    <div>
+                        <div class="flex items-center space-x-3">
+                            <h2 id="current-group-title" class="game-title text-3xl font-extrabold text-slate-800">5th Semester</h2>
+                            <button onclick="openEditGroupModal()" class="text-slate-400 hover:text-indigo-600 text-sm" title="Renombrar grupo">✏️</button>
+                        </div>
+                        <p class="text-slate-500 text-sm font-medium">Active XP Leaderboard • English Class Competition</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <button onclick="openAddTeamModal()" class="btn-bounce flex-1 md:flex-none px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-2xl shadow-md text-sm flex items-center justify-center space-x-2">
+                        <span>➕</span>
+                        <span>ADD TEAM</span>
+                    </button>
+                    <button onclick="quickAddMultipleTeams()" class="btn-bounce flex-1 md:flex-none px-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold rounded-2xl border border-indigo-200 text-sm flex items-center justify-center space-x-2">
+                        <span>⚡</span>
+                        <span>Quick Multi-Team</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Quick Undo Notice -->
+            <div class="sm:hidden flex justify-end">
+                <button onclick="undoLastAction()" class="btn-bounce w-full py-2 bg-slate-200 text-slate-800 rounded-xl font-bold text-sm flex items-center justify-center space-x-2">
+                    <span>↩️ Undo Last XP Action</span>
+                </button>
+            </div>
+
+            <!-- Team Leaderboard Cards Container -->
+            <div id="teams-leaderboard-container" class="space-y-4">
+                <!-- Teams will be dynamically populated here -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-12">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p class="font-semibold">🎮 XP Team Battle — English Class Gamification System</p>
+            <p>Designed for fast classroom use • Auto-Saved via LocalStorage</p>
+        </div>
+    </footer>
+
+    <!-- MODALS SECTION -->
+
+    <!-- 1. Custom XP Modal -->
+    <div id="modal-custom-xp" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 card-shadow-lg space-y-5 animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="game-title text-xl font-bold text-slate-800">➕ Add Custom XP</h3>
+                <button onclick="closeModal('modal-custom-xp')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+
+            <div>
+                <p class="text-sm text-slate-600 font-medium mb-1">Target Team:</p>
+                <p id="custom-xp-team-name" class="font-extrabold text-indigo-600 text-lg">Team Name</p>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">XP Points (Use negative for penalties, e.g., -10)</label>
+                    <input type="number" id="custom-xp-amount" class="w-full px-4 py-3 border-2 border-indigo-200 focus:border-indigo-600 rounded-2xl text-xl font-extrabold text-slate-800 outline-none" placeholder="e.g. 35 or -10" value="15">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Reason / Description (Optional)</label>
+                    <input type="text" id="custom-xp-reason" class="w-full px-4 py-3 border border-slate-200 focus:border-indigo-600 rounded-2xl text-sm font-semibold text-slate-800 outline-none" placeholder="e.g. Grammar Challenge Winner, Kahoot #1">
+                </div>
+            </div>
+
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeModal('modal-custom-xp')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-sm">Cancel</button>
+                <button onclick="submitCustomXP()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl text-sm shadow-md">Apply XP</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 2. XP History Modal -->
+    <div id="modal-history" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 card-shadow-lg space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">📜</span>
+                    <h3 id="history-team-title" class="game-title text-xl font-bold text-slate-800">XP History</h3>
+                </div>
+                <button onclick="closeModal('modal-history')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+
+            <div id="history-list" class="max-h-80 overflow-y-auto space-y-2.5 pr-1">
+                <!-- History items injected here -->
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button onclick="closeModal('modal-history')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-2xl text-sm">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 3. Add / Edit Team Modal -->
+    <div id="modal-team-form" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 card-shadow-lg space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 id="team-modal-title" class="game-title text-xl font-bold text-slate-800">➕ Add New Team</h3>
+                <button onclick="closeModal('modal-team-form')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+
+            <form onsubmit="saveTeamForm(event)" class="space-y-4">
+                <input type="hidden" id="team-form-id">
+                
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Team Name</label>
+                    <input type="text" id="team-form-name" required class="w-full px-4 py-3 border border-slate-200 focus:border-indigo-600 rounded-2xl text-sm font-bold text-slate-800 outline-none" placeholder="e.g. Team Avengers">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Team Members (Separated by commas)</label>
+                    <textarea id="team-form-members" rows="2" class="w-full px-4 py-2.5 border border-slate-200 focus:border-indigo-600 rounded-2xl text-xs font-semibold text-slate-800 outline-none resize-none" placeholder="e.g. Alex, Maria, Carlos, Sofia"></textarea>
+                    <p class="text-[10px] text-slate-400 mt-1">💡 Quick tip: Type names separated by commas to add students rapidly.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Team Emoji / Icon</label>
+                    <div class="grid grid-cols-6 gap-2" id="emoji-picker-container">
+                        <!-- Emojis injected dynamically -->
+                    </div>
+                    <input type="hidden" id="team-form-emoji" value="🦁">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Team Color Badge</label>
+                    <div class="flex space-x-3" id="color-picker-container">
+                        <!-- Colors injected dynamically -->
+                    </div>
+                    <input type="hidden" id="team-form-color" value="#4F46E5">
+                </div>
+
+                <div class="flex space-x-3 pt-3">
+                    <button type="button" onclick="closeModal('modal-team-form')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-sm">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl text-sm shadow-md">Save Team</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- 4. Add Group Modal -->
+    <div id="modal-group-form" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 card-shadow-lg space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 id="group-modal-title" class="game-title text-xl font-bold text-slate-800">➕ Add New Group</h3>
+                <button onclick="closeModal('modal-group-form')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            </div>
+
+            <form onsubmit="saveGroupForm(event)" class="space-y-4">
+                <input type="hidden" id="group-form-id">
+                
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Group / Semester Name</label>
+                    <input type="text" id="group-form-name" required class="w-full px-4 py-3 border border-slate-200 focus:border-indigo-600 rounded-2xl text-sm font-bold text-slate-800 outline-none" placeholder="e.g. 7th Semester or English B1">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Default Teams Count (Initial Creation)</label>
+                    <select id="group-form-initial-teams" class="w-full px-4 py-3 border border-slate-200 focus:border-indigo-600 rounded-2xl text-sm font-bold text-slate-800 outline-none">
+                        <option value="5">5 Teams (Team 1 to Team 5)</option>
+                        <option value="3">3 Teams</option>
+                        <option value="4">4 Teams</option>
+                        <option value="6">6 Teams</option>
+                        <option value="0">Empty (Add teams manually)</option>
+                    </select>
+                </div>
+
+                <div class="flex space-x-3 pt-3">
+                    <button type="button" onclick="closeModal('modal-group-form')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-sm">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-2xl text-sm shadow-md">Save Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- 5. Teacher Mode Modal / Panel -->
+    <div id="modal-teacher" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 card-shadow-lg space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">⚙️</span>
+                    <div>
+                        <h3 class="game-title text-2xl font-bold text-slate-800">Teacher Control Panel</h3>
+                        <p class="text-xs text-slate-500 font-medium">Manage all groups, teams, reset scores & export class statistics</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-teacher')" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">✕</button>
+            </div>
+
+            <!-- Action Sections -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Export Options -->
+                <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl space-y-3">
+                    <h4 class="font-extrabold text-indigo-900 text-sm flex items-center space-x-2">
+                        <span>📥</span> <span>Data Export</span>
+                    </h4>
+                    <p class="text-xs text-indigo-700">Download current rankings, levels, and team points for your records.</p>
+                    <div class="flex space-x-2">
+                        <button onclick="exportCSV()" class="btn-bounce flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow">Export CSV</button>
+                        <button onclick="exportJSON()" class="btn-bounce flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow">Export JSON</button>
+                    </div>
+                </div>
+
+                <!-- Reset Options -->
+                <div class="p-4 bg-amber-50 border border-amber-100 rounded-2xl space-y-3">
+                    <h4 class="font-extrabold text-amber-900 text-sm flex items-center space-x-2">
+                        <span>🔄</span> <span>Group XP Reset</span>
+                    </h4>
+                    <p class="text-xs text-amber-700">Reset all team XP back to 0 for the currently selected group.</p>
+                    <button onclick="resetCurrentGroupXP()" class="btn-bounce w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow">Reset Active Group XP</button>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3">
+                <h4 class="font-extrabold text-rose-900 text-sm flex items-center space-x-2">
+                    <span>⚠️</span> <span>Danger Zone</span>
+                </h4>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="deleteCurrentGroup()" class="btn-bounce flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow">Delete Active Group</button>
+                    <button onclick="resetAllFactoryData()" class="btn-bounce flex-1 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow">Reset ALL App Data to Default</button>
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end border-t border-slate-100">
+                <button onclick="closeModal('modal-teacher')" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-sm">Close Panel</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 6. Projector Mode View Overlay -->
+    <div id="projector-overlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 p-6 flex flex-col justify-between hidden">
+        <!-- Projector Header -->
+        <div class="flex items-center justify-between max-w-7xl mx-auto w-full border-b border-slate-800 pb-4">
+            <div class="flex items-center space-x-4">
+                <span class="text-4xl">📺</span>
+                <div>
+                    <h2 id="projector-group-name" class="game-title text-3xl sm:text-4xl font-extrabold text-white">5th SEMESTER</h2>
+                    <p class="text-indigo-400 font-bold text-sm tracking-wide uppercase">🏆 XP LEADERBOARD • LIVE CLASSROOM DISPLAY</p>
+                </div>
+            </div>
+            <button onclick="closeProjectorMode()" class="btn-bounce px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-2xl text-sm shadow-lg">
+                ✕ Exit Projector
+            </button>
+        </div>
+
+        <!-- Projector Ranking List -->
+        <div class="max-w-5xl mx-auto w-full my-auto py-6 space-y-4" id="projector-teams-list">
+            <!-- Rendered top projector cards dynamically -->
+        </div>
+
+        <div class="text-center text-slate-500 text-xs font-semibold">
+            Press ESC or click button to exit • Real-time score updates enabled
+        </div>
+    </div>
+
+
+    <!-- 7. Achievement / Level Up Celebration Popup Modal -->
+    <div id="modal-celebration" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 text-center card-shadow-lg space-y-4 animate-bounce">
+            <div id="celebration-icon" class="text-7xl">🎉</div>
+            <h3 id="celebration-title" class="game-title text-3xl font-extrabold text-slate-800">LEVEL UP!</h3>
+            <p id="celebration-subtitle" class="text-base font-bold text-indigo-600">Team Avengers reached Level 4!</p>
+            <p id="celebration-desc" class="text-xs text-slate-500 font-medium">Keep racking up points to unlock more badges and rewards!</p>
+            <button onclick="closeModal('modal-celebration')" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl text-sm shadow-lg btn-bounce">Awesome!</button>
+        </div>
+    </div>
+
+
+    <script>
+        /* ==========================================================================
+           1. INITIAL STATE & CONSTANTS
+           ========================================================================== */
+
+        const DEFAULT_GROUPS = [
+            {
+                id: 'g1',
+                name: '1st Semester',
+                teams: [
+                    { id: 't1_1', name: 'Team 1', emoji: '🦁', color: '#4F46E5', xp: 0, members: ['Alex', 'Emma', 'Daniel'], history: [] },
+                    { id: 't1_2', name: 'Team 2', emoji: '🐉', color: '#10B981', xp: 0, members: ['Sofia', 'Lucas', 'Mia'], history: [] },
+                    { id: 't1_3', name: 'Team 3', emoji: '⚡', color: '#F59E0B', xp: 0, members: ['Carlos', 'Chloe'], history: [] },
+                    { id: 't1_4', name: 'Team 4', emoji: '🔥', color: '#EF4444', xp: 0, members: ['Mateo', 'Zoe'], history: [] },
+                    { id: 't1_5', name: 'Team 5', emoji: '🌟', color: '#8B5CF6', xp: 0, members: ['Leo', 'Grace'], history: [] }
+                ]
+            },
+            {
+                id: 'g2',
+                name: '3rd Semester',
+                teams: [
+                    { id: 't2_1', name: 'Team 1', emoji: '🦅', color: '#4F46E5', xp: 0, members: ['Liam', 'Noah'], history: [] },
+                    { id: 't2_2', name: 'Team 2', emoji: '🐺', color: '#10B981', xp: 0, members: ['Oliver', 'Ava'], history: [] },
+                    { id: 't2_3', name: 'Team 3', emoji: '🚀', color: '#F59E0B', xp: 0, members: ['Ethan', 'Isabella'], history: [] },
+                    { id: 't2_4', name: 'Team 4', emoji: '👑', color: '#EF4444', xp: 0, members: ['James', 'Sophia'], history: [] },
+                    { id: 't2_5', name: 'Team 5', emoji: '💎', color: '#8B5CF6', xp: 0, members: ['Benjamin', 'Mia'], history: [] }
+                ]
+            },
+            {
+                id: 'g3',
+                name: '5th Semester',
+                teams: [
+                    { id: 't3_1', name: 'Team Avengers', emoji: '🛡️', color: '#4F46E5', xp: 850, members: ['Alex G.', 'Maria S.', 'Juan P.', 'Camila R.'], history: [{ xp: 850, reason: 'Initial Setup', date: 'Today' }] },
+                    { id: 't3_2', name: 'Team Warriors', emoji: '⚔️', color: '#10B981', xp: 720, members: ['Diego M.', 'Sofia L.', 'Fernando V.'], history: [{ xp: 720, reason: 'Initial Setup', date: 'Today' }] },
+                    { id: 't3_3', name: 'Team Legends', emoji: '🏆', color: '#F59E0B', xp: 640, members: ['Gabriel H.', 'Lucia B.', 'Andrea M.'], history: [{ xp: 640, reason: 'Initial Setup', date: 'Today' }] },
+                    { id: 't3_4', name: 'Team Stars', emoji: '⭐', color: '#EF4444', xp: 510, members: ['David K.', 'Paula E.'], history: [{ xp: 510, reason: 'Initial Setup', date: 'Today' }] },
+                    { id: 't3_5', name: 'Team Dragons', emoji: '🐉', color: '#8B5CF6', xp: 430, members: ['Adrian T.', 'Valeria F.'], history: [{ xp: 430, reason: 'Initial Setup', date: 'Today' }] }
+                ]
+            }
+        ];
+
+        const EMOJI_OPTIONS = ['🦁', '🐉', '⚡', '🔥', '🌟', '🦅', '🐺', '🚀', '👑', '💎', '🛡️', '⚔️', '🏆', '🎯', '🦄', '🐯', '🤖', '👾'];
+        const COLOR_OPTIONS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#0EA5E9', '#64748B'];
+
+        // App state
+        let appData = {
+            soundOn: true,
+            currentGroupId: 'g3',
+            groups: []
+        };
+
+        // Undo Stack
+        let undoStack = [];
+
+        // Active Modal State
+        let activeCustomXPTeamId = null;
+
+        /* ==========================================================================
+           2. LOCALSTORAGE PERSISTENCE
+           ========================================================================== */
+
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('xp_team_battle_data');
+                if (saved) {
+                    appData = JSON.parse(saved);
+                } else {
+                    appData.groups = DEFAULT_GROUPS;
+                    saveData();
+                }
+            } catch (e) {
+                console.error('Error loading data from localStorage', e);
+                appData.groups = DEFAULT_GROUPS;
+            }
+            updateSoundUI();
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('xp_team_battle_data', JSON.stringify(appData));
+            } catch (e) {
+                console.error('Error saving data to localStorage', e);
+            }
+        }
+
+
+        /* ==========================================================================
+           3. WEB AUDIO SYNTHESIS SOUND ENGINE (No external audio files needed!)
+           ========================================================================== */
+
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playTone(freq, type = 'sine', duration = 0.15, vol = 0.1) {
+            if (!appData.soundOn) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (e) {
+                console.log('Audio playback error', e);
+            }
+        }
+
+        function playSound(type) {
+            if (!appData.soundOn) return;
+
+            if (type === 'addXP') {
+                playTone(587.33, 'triangle', 0.1, 0.15); // D5
+                setTimeout(() => playTone(880, 'triangle', 0.15, 0.2), 80); // A5
+            } else if (type === 'levelUp') {
+                // Fanfare notes
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((n, idx) => {
+                    setTimeout(() => playTone(n, 'sine', 0.25, 0.2), idx * 100);
+                });
+            } else if (type === 'firstPlace') {
+                playTone(880, 'sine', 0.15, 0.2);
+                setTimeout(() => playTone(1174.66, 'sine', 0.3, 0.25), 120);
+            } else if (type === 'undo') {
+                playTone(400, 'sawtooth', 0.1, 0.1);
+                setTimeout(() => playTone(300, 'sawtooth', 0.15, 0.1), 80);
+            } else if (type === 'achievement') {
+                playTone(659.25, 'sine', 0.1, 0.15);
+                setTimeout(() => playTone(880, 'sine', 0.1, 0.15), 90);
+                setTimeout(() => playTone(1318.51, 'sine', 0.3, 0.2), 180);
+            }
+        }
+
+        function toggleSound() {
+            appData.soundOn = !appData.soundOn;
+            saveData();
+            updateSoundUI();
+            if (appData.soundOn) playSound('addXP');
+        }
+
+        function updateSoundUI() {
+            const icon = document.getElementById('sound-icon');
+            const text = document.getElementById('sound-text');
+            if (appData.soundOn) {
+                icon.textContent = '🔊';
+                text.textContent = 'Sound ON';
+            } else {
+                icon.textContent = '🔇';
+                text.textContent = 'Sound OFF';
+            }
+        }
+
+
+        /* ==========================================================================
+           4. LEVEL SYSTEM & ACHIEVEMENTS
+           ========================================================================== */
+
+        function getLevelInfo(xp) {
+            // Level thresholds:
+            // Level 1: 0 - 100
+            // Level 2: 101 - 250
+            // Level 3: 251 - 500
+            // Level 4: 501 - 750
+            // Level 5: 751 - 1000
+            // Level 6+: 1000+
+            if (xp <= 100) {
+                const pct = Math.min(100, Math.max(0, (xp / 100) * 100));
+                return { level: 1, nextXP: 100, minXP: 0, progress: pct };
+            } else if (xp <= 250) {
+                const pct = Math.min(100, Math.max(0, ((xp - 100) / 150) * 100));
+                return { level: 2, nextXP: 250, minXP: 100, progress: pct };
+            } else if (xp <= 500) {
+                const pct = Math.min(100, Math.max(0, ((xp - 250) / 250) * 100));
+                return { level: 3, nextXP: 500, minXP: 250, progress: pct };
+            } else if (xp <= 750) {
+                const pct = Math.min(100, Math.max(0, ((xp - 500) / 250) * 100));
+                return { level: 4, nextXP: 750, minXP: 500, progress: pct };
+            } else if (xp <= 1000) {
+                const pct = Math.min(100, Math.max(0, ((xp - 750) / 250) * 100));
+                return { level: 5, nextXP: 1000, minXP: 750, progress: pct };
+            } else {
+                return { level: 6, nextXP: 'MAX', minXP: 1000, progress: 100 };
+            }
+        }
+
+        /* ==========================================================================
+           5. CONFETTI ANIMATION ENGINE
+           ========================================================================== */
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6'];
+
+            for (let i = 0; i < 90; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 - 50,
+                    vx: (Math.random() - 0.5) * 16,
+                    vy: (Math.random() - 0.7) * 16,
+                    size: Math.random() * 8 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rSpeed: (Math.random() - 0.5) * 10,
+                    opacity: 1
+                });
+            }
+
+            let animationFrame;
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.35; // gravity
+                    p.rotation += p.rSpeed;
+                    p.opacity -= 0.015;
+
+                    if (p.opacity > 0) {
+                        alive = true;
+                        ctx.save();
+                        ctx.globalAlpha = Math.max(0, p.opacity);
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate((p.rotation * Math.PI) / 180);
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                        ctx.restore();
+                    }
+                });
+
+                if (alive) {
+                    animationFrame = requestAnimationFrame(render);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    cancelAnimationFrame(animationFrame);
+                }
+            }
+
+            render();
+        }
+
+
+        /* ==========================================================================
+           6. UI NAVIGATION & RENDER FUNCTIONS
+           ========================================================================== */
+
+        function navigateTo(view) {
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-leaderboard').classList.add('hidden');
+
+            if (view === 'dashboard') {
+                renderDashboard();
+                document.getElementById('view-dashboard').classList.remove('hidden');
+            } else if (view === 'leaderboard') {
+                renderLeaderboard();
+                document.getElementById('view-leaderboard').classList.remove('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderDashboard() {
+            const grid = document.getElementById('groups-grid');
+            grid.innerHTML = '';
+
+            if (appData.groups.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center bg-white rounded-3xl border border-dashed border-slate-300">
+                        <p class="text-4xl mb-2">📁</p>
+                        <h4 class="font-extrabold text-slate-700 text-lg">No Groups Available</h4>
+                        <p class="text-xs text-slate-500 mb-4">Click below to create your first class group!</p>
+                        <button onclick="openAddGroupModal()" class="px-4 py-2 bg-emerald-500 text-white rounded-xl font-bold text-xs">➕ Add Group</button>
+                    </div>
+                `;
+                return;
+            }
+
+            appData.groups.forEach(group => {
+                const teamCount = group.teams.length;
+                const topTeam = [...group.teams].sort((a, b) => b.xp - a.xp)[0];
+                const leaderText = topTeam && topTeam.xp > 0 ? `${topTeam.emoji} ${topTeam.name} (${topTeam.xp} XP)` : 'No XP yet';
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-3xl p-6 card-shadow border border-slate-100 flex flex-col justify-between hover:border-indigo-300 transition-all cursor-pointer group";
+                card.onclick = () => {
+                    appData.currentGroupId = group.id;
+                    saveData();
+                    navigateTo('leaderboard');
+                };
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider">Class Group</span>
+                            <span class="text-xs font-extrabold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">👥 ${teamCount} Teams</span>
+                        </div>
+                        <h3 class="game-title text-2xl font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-2">${group.name}</h3>
+                        
+                        <div class="bg-slate-50 rounded-2xl p-3 border border-slate-100 flex items-center space-x-2 text-xs font-semibold text-slate-600 mb-4">
+                            <span>🥇 Leader:</span>
+                            <span class="text-slate-800 font-extrabold truncate">${leaderText}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                        <span class="text-xs font-bold text-indigo-600 group-hover:translate-x-1 transition-transform inline-flex items-center space-x-1">
+                            <span>Open Leaderboard</span> <span>➡️</span>
+                        </span>
+                        <button onclick="event.stopPropagation(); openEditGroupModal('${group.id}')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100" title="Editar Grupo">✏️</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderLeaderboard() {
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            if (!group) {
+                navigateTo('dashboard');
+                return;
+            }
+
+            document.getElementById('current-group-title').textContent = group.name;
+
+            const container = document.getElementById('teams-leaderboard-container');
+            container.innerHTML = '';
+
+            if (group.teams.length === 0) {
+                container.innerHTML = `
+                    <div class="py-16 text-center bg-white rounded-3xl border border-dashed border-slate-300 space-y-3">
+                        <span class="text-5xl">👥</span>
+                        <h4 class="game-title text-xl font-bold text-slate-700">No Teams in this Group</h4>
+                        <p class="text-xs text-slate-500">Add teams to start tracking XP and levels!</p>
+                        <button onclick="openAddTeamModal()" class="px-5 py-2.5 bg-emerald-500 text-white font-extrabold rounded-2xl text-xs btn-bounce">➕ Add First Team</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Auto-sort teams by XP descending
+            const sortedTeams = [...group.teams].sort((a, b) => b.xp - a.xp);
+
+            sortedTeams.forEach((team, index) => {
+                const rank = index + 1;
+                const levelInfo = getLevelInfo(team.xp);
+
+                // Rank badge logic
+                let rankBadge = `${rank}️⃣`;
+                let cardClass = "bg-white border-slate-200";
+
+                if (rank === 1) {
+                    rankBadge = "🥇";
+                    cardClass = "top-1-card";
+                } else if (rank === 2) {
+                    rankBadge = "🥈";
+                    cardClass = "top-2-card";
+                } else if (rank === 3) {
+                    rankBadge = "🥉";
+                    cardClass = "top-3-card";
+                }
+
+                const teamCard = document.createElement('div');
+                teamCard.className = `rounded-3xl p-5 sm:p-6 card-shadow border transition-all relative overflow-hidden ${cardClass}`;
+                teamCard.id = `team-card-${team.id}`;
+
+                teamCard.innerHTML = `
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                        
+                        <!-- Left: Rank, Emoji, Name & Level -->
+                        <div class="flex items-center space-x-3 sm:space-x-4 min-w-[240px]">
+                            <div class="text-3xl sm:text-4xl font-extrabold w-10 text-center flex-shrink-0">${rankBadge}</div>
+                            
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0 shadow-inner" style="background-color: ${team.color}15; border: 2px solid ${team.color}40;">
+                                ${team.emoji}
+                            </div>
+
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h3 class="game-title text-xl sm:text-2xl font-bold text-slate-800">${team.name}</h3>
+                                    <button onclick="openEditTeamModal('${team.id}')" class="text-slate-300 hover:text-indigo-600 text-xs" title="Editar Equipo">✏️</button>
+                                </div>
+                                <div class="flex items-center space-x-2 mt-0.5">
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-indigo-100 text-indigo-700">Level ${levelInfo.level}</span>
+                                    <button onclick="openHistoryModal('${team.id}')" class="text-xs text-slate-500 hover:text-indigo-600 font-semibold underline">History</button>
+                                </div>
+                                <!-- Member Tags Display -->
+                                <div class="flex flex-wrap gap-1 mt-2 max-w-xs sm:max-w-md">
+                                    ${team.members && team.members.length > 0 
+                                        ? team.members.map(m => `<span class="px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold flex items-center shadow-xs">👤 ${m}</span>`).join('') 
+                                        : '<span class="text-[11px] text-slate-400 italic">No members assigned • Click ✏️ to add</span>'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Middle: XP Display & Progress Bar -->
+                        <div class="w-full lg:max-w-xs space-y-1.5 flex-grow">
+                            <div class="flex justify-between items-center text-xs font-extrabold">
+                                <span class="text-indigo-600 font-fredoka text-base">⭐ ${team.xp} <span class="text-xs text-slate-500 font-sans">XP</span></span>
+                                <span class="text-slate-400 font-medium">Next: ${levelInfo.nextXP} XP</span>
+                            </div>
+                            <div class="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                                <div class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500" style="width: ${levelInfo.progress}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Quick XP Buttons -->
+                        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto justify-start lg:justify-end">
+                            <button onclick="addXP('${team.id}', 5, 'Quick +5')" class="btn-bounce px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold rounded-xl border border-emerald-200 text-xs sm:text-sm flex-1 sm:flex-none text-center">+5</button>
+                            <button onclick="addXP('${team.id}', 10, 'Quick +10')" class="btn-bounce px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold rounded-xl border border-emerald-200 text-xs sm:text-sm flex-1 sm:flex-none text-center">+10</button>
+                            <button onclick="addXP('${team.id}', 20, 'Quick +20')" class="btn-bounce px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold rounded-xl border border-emerald-200 text-xs sm:text-sm flex-1 sm:flex-none text-center">+20</button>
+                            <button onclick="addXP('${team.id}', 50, 'Quick +50')" class="btn-bounce px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl text-xs sm:text-sm flex-1 sm:flex-none text-center shadow-sm">+50</button>
+                            <button onclick="openCustomXPModal('${team.id}')" class="btn-bounce px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold rounded-xl border border-indigo-200 text-xs sm:text-sm flex-1 sm:flex-none text-center">➕ Custom</button>
+                        </div>
+
+                    </div>
+                `;
+                container.appendChild(teamCard);
+            });
+
+            // Update projector if open
+            if (!document.getElementById('projector-overlay').classList.contains('hidden')) {
+                renderProjectorView();
+            }
+        }
+
+
+        /* ==========================================================================
+           7. XP OPERATIONS, ANIMATIONS & UNDO
+           ========================================================================== */
+
+        function addXP(teamId, amount, reason = 'Quick Points', eventTarget = null) {
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            if (!group) return;
+
+            const team = group.teams.find(t => t.id === teamId);
+            if (!team) return;
+
+            // Record old state for undo
+            const oldXP = team.xp;
+            const oldLevel = getLevelInfo(oldXP).level;
+
+            // Save state to undo stack
+            undoStack.push({
+                groupId: group.id,
+                teamId: team.id,
+                oldXP: oldXP,
+                newXP: oldXP + amount,
+                reason: reason,
+                timestamp: new Date().toLocaleTimeString()
+            });
+
+            // Check if rank 1 lead changed
+            const initialTopTeamId = [...group.teams].sort((a, b) => b.xp - a.xp)[0]?.id;
+
+            // Update XP
+            team.xp += amount;
+            if (team.xp < 0) team.xp = 0; // Prevent negative total XP
+
+            // Push history
+            if (!team.history) team.history = [];
+            team.history.unshift({
+                xp: amount,
+                reason: reason,
+                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            saveData();
+
+            // Check new level
+            const newLevelInfo = getLevelInfo(team.xp);
+
+            // Play sound
+            if (newLevelInfo.level > oldLevel) {
+                playSound('levelUp');
+                triggerConfetti();
+                showCelebrationModal('🎉 LEVEL UP!', `${team.emoji} ${team.name} reached Level ${newLevelInfo.level}!`);
+            } else if (amount > 0) {
+                playSound('addXP');
+            } else {
+                playSound('undo');
+            }
+
+            // Check if team took 1st place
+            const newTopTeamId = [...group.teams].sort((a, b) => b.xp - a.xp)[0]?.id;
+            if (newTopTeamId === team.id && initialTopTeamId !== team.id && group.teams.length > 1) {
+                setTimeout(() => {
+                    playSound('firstPlace');
+                    triggerConfetti();
+                }, 200);
+            }
+
+            // Show floating animation text near card
+            showFloatingXP(teamId, amount);
+
+            // Refresh UI
+            renderLeaderboard();
+        }
+
+        function showFloatingXP(teamId, amount) {
+            const card = document.getElementById(`team-card-${teamId}`);
+            if (!card) return;
+
+            const el = document.createElement('div');
+            el.className = 'floating-xp text-2xl font-extrabold';
+            el.style.color = amount >= 0 ? '#10B981' : '#EF4444';
+            el.style.left = '50%';
+            el.style.top = '20px';
+            el.textContent = `${amount >= 0 ? '+' : ''}${amount} XP! ⭐`;
+
+            card.appendChild(el);
+
+            setTimeout(() => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 1200);
+        }
+
+        function undoLastAction() {
+            if (undoStack.length === 0) {
+                alert('No hay acciones recientes para deshacer.');
+                return;
+            }
+
+            const last = undoStack.pop();
+            const group = appData.groups.find(g => g.id === last.groupId);
+            if (!group) return;
+
+            const team = group.teams.find(t => t.id === last.teamId);
+            if (!team) return;
+
+            team.xp = last.oldXP;
+            if (team.history && team.history.length > 0) {
+                team.history.shift(); // Remove top log
+            }
+
+            saveData();
+            playSound('undo');
+            renderLeaderboard();
+        }
+
+
+        /* ==========================================================================
+           8. MODALS & TEACHER MODE HANDLERS
+           ========================================================================== */
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function openCustomXPModal(teamId) {
+            activeCustomXPTeamId = teamId;
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            const team = group.teams.find(t => t.id === teamId);
+
+            document.getElementById('custom-xp-team-name').textContent = `${team.emoji} ${team.name}`;
+            document.getElementById('custom-xp-amount').value = '15';
+            document.getElementById('custom-xp-reason').value = '';
+            document.getElementById('modal-custom-xp').classList.remove('hidden');
+            document.getElementById('custom-xp-amount').focus();
+        }
+
+        function submitCustomXP() {
+            const amt = parseInt(document.getElementById('custom-xp-amount').value, 10);
+            const reason = document.getElementById('custom-xp-reason').value.trim() || 'Custom XP';
+
+            if (isNaN(amt)) {
+                alert('Ingresa una cantidad numérica válida.');
+                return;
+            }
+
+            closeModal('modal-custom-xp');
+            addXP(activeCustomXPTeamId, amt, reason);
+        }
+
+        function openHistoryModal(teamId) {
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            const team = group.teams.find(t => t.id === teamId);
+
+            document.getElementById('history-team-title').textContent = `${team.emoji} ${team.name} — XP Log`;
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+
+            if (!team.history || team.history.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Sin historial registrado aún.</p>`;
+            } else {
+                team.history.forEach(item => {
+                    const isPos = item.xp >= 0;
+                    const itemEl = document.createElement('div');
+                    itemEl.className = "p-3 bg-slate-50 rounded-2xl flex justify-between items-center text-xs border border-slate-100";
+                    itemEl.innerHTML = `
+                        <div>
+                            <p class="font-extrabold text-slate-800">${item.reason}</p>
+                            <p class="text-[10px] text-slate-400 font-semibold">${item.date || 'Reciente'}</p>
+                        </div>
+                        <span class="font-extrabold text-sm ${isPos ? 'text-emerald-600' : 'text-rose-600'}">
+                            ${isPos ? '+' : ''}${item.xp} XP
+                        </span>
+                    `;
+                    list.appendChild(itemEl);
+                });
+            }
+
+            document.getElementById('modal-history').classList.remove('hidden');
+        }
+
+        // Add / Edit Team Form
+        function renderEmojiAndColorPickers() {
+            const emojiContainer = document.getElementById('emoji-picker-container');
+            emojiContainer.innerHTML = '';
+            EMOJI_OPTIONS.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = "p-2 rounded-xl text-xl hover:bg-indigo-50 border border-slate-100";
+                btn.textContent = emoji;
+                btn.onclick = () => {
+                    document.getElementById('team-form-emoji').value = emoji;
+                    Array.from(emojiContainer.children).forEach(c => c.classList.remove('border-indigo-600', 'bg-indigo-100'));
+                    btn.classList.add('border-indigo-600', 'bg-indigo-100');
+                };
+                emojiContainer.appendChild(btn);
+            });
+
+            const colorContainer = document.getElementById('color-picker-container');
+            colorContainer.innerHTML = '';
+            COLOR_OPTIONS.forEach(color => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = "w-8 h-8 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-transform";
+                btn.style.backgroundColor = color;
+                btn.onclick = () => {
+                    document.getElementById('team-form-color').value = color;
+                    Array.from(colorContainer.children).forEach(c => c.style.transform = 'scale(1)');
+                    btn.style.transform = 'scale(1.25)';
+                };
+                colorContainer.appendChild(btn);
+            });
+        }
+
+        function openAddTeamModal() {
+            document.getElementById('team-modal-title').textContent = '➕ Add New Team';
+            document.getElementById('team-form-id').value = '';
+            document.getElementById('team-form-name').value = '';
+            document.getElementById('team-form-members').value = '';
+            document.getElementById('team-form-emoji').value = '🦁';
+            document.getElementById('team-form-color').value = '#4F46E5';
+            renderEmojiAndColorPickers();
+            document.getElementById('modal-team-form').classList.remove('hidden');
+        }
+
+        function openEditTeamModal(teamId) {
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            const team = group.teams.find(t => t.id === teamId);
+
+            document.getElementById('team-modal-title').textContent = '✏️ Edit Team';
+            document.getElementById('team-form-id').value = team.id;
+            document.getElementById('team-form-name').value = team.name;
+            document.getElementById('team-form-members').value = team.members ? team.members.join(', ') : '';
+            document.getElementById('team-form-emoji').value = team.emoji;
+            document.getElementById('team-form-color').value = team.color;
+            renderEmojiAndColorPickers();
+            document.getElementById('modal-team-form').classList.remove('hidden');
+        }
+
+        function saveTeamForm(event) {
+            event.preventDefault();
+            const teamId = document.getElementById('team-form-id').value;
+            const name = document.getElementById('team-form-name').value.trim();
+            const membersRaw = document.getElementById('team-form-members').value;
+            const members = membersRaw.split(',').map(m => m.trim()).filter(Boolean);
+            const emoji = document.getElementById('team-form-emoji').value;
+            const color = document.getElementById('team-form-color').value;
+
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+
+            if (teamId) {
+                // Edit existing
+                const team = group.teams.find(t => t.id === teamId);
+                team.name = name;
+                team.members = members;
+                team.emoji = emoji;
+                team.color = color;
+            } else {
+                // Add new
+                const newTeam = {
+                    id: 't_' + Date.now(),
+                    name: name,
+                    members: members,
+                    emoji: emoji,
+                    color: color,
+                    xp: 0,
+                    history: []
+                };
+                group.teams.push(newTeam);
+            }
+
+            saveData();
+            closeModal('modal-team-form');
+            renderLeaderboard();
+        }
+
+        function quickAddMultipleTeams() {
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            const nextNum = group.teams.length + 1;
+            const newTeam = {
+                id: 't_' + Date.now(),
+                name: `Team ${nextNum}`,
+                members: [],
+                emoji: EMOJI_OPTIONS[Math.floor(Math.random() * EMOJI_OPTIONS.length)],
+                color: COLOR_OPTIONS[Math.floor(Math.random() * COLOR_OPTIONS.length)],
+                xp: 0,
+                history: []
+            };
+            group.teams.push(newTeam);
+            saveData();
+            playSound('addXP');
+            renderLeaderboard();
+        }
+
+        // Add / Edit Group Modal Handlers
+        function openAddGroupModal() {
+            document.getElementById('group-modal-title').textContent = '➕ Add New Group';
+            document.getElementById('group-form-id').value = '';
+            document.getElementById('group-form-name').value = '';
+            document.getElementById('group-form-initial-teams').classList.remove('hidden');
+            document.getElementById('modal-group-form').classList.remove('hidden');
+        }
+
+        function openEditGroupModal(groupId = null) {
+            const id = groupId || appData.currentGroupId;
+            const group = appData.groups.find(g => g.id === id);
+
+            document.getElementById('group-modal-title').textContent = '✏️ Rename Group';
+            document.getElementById('group-form-id').value = group.id;
+            document.getElementById('group-form-name').value = group.name;
+            document.getElementById('group-form-initial-teams').classList.add('hidden');
+            document.getElementById('modal-group-form').classList.remove('hidden');
+        }
+
+        function saveGroupForm(event) {
+            event.preventDefault();
+            const groupId = document.getElementById('group-form-id').value;
+            const name = document.getElementById('group-form-name').value.trim();
+
+            if (groupId) {
+                const group = appData.groups.find(g => g.id === groupId);
+                group.name = name;
+            } else {
+                const initialCount = parseInt(document.getElementById('group-form-initial-teams').value, 10);
+                const teams = [];
+                for (let i = 1; i <= initialCount; i++) {
+                    teams.push({
+                        id: 't_' + Date.now() + '_' + i,
+                        name: `Team ${i}`,
+                        emoji: EMOJI_OPTIONS[(i - 1) % EMOJI_OPTIONS.length],
+                        color: COLOR_OPTIONS[(i - 1) % COLOR_OPTIONS.length],
+                        xp: 0,
+                        history: []
+                    });
+                }
+                const newGroup = {
+                    id: 'g_' + Date.now(),
+                    name: name,
+                    teams: teams
+                };
+                appData.groups.push(newGroup);
+                appData.currentGroupId = newGroup.id;
+            }
+
+            saveData();
+            closeModal('modal-group-form');
+            if (groupId && document.getElementById('view-leaderboard').classList.contains('hidden')) {
+                renderDashboard();
+            } else {
+                navigateTo('leaderboard');
+            }
+        }
+
+        // Teacher Control Panel Functions
+        function openTeacherModal() {
+            document.getElementById('modal-teacher').classList.remove('hidden');
+        }
+
+        function resetCurrentGroupXP() {
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            if (!group) return;
+
+            if (confirm(`¿Estás seguro de reiniciar a 0 XP todos los equipos del grupo "${group.name}"?`)) {
+                group.teams.forEach(t => {
+                    t.xp = 0;
+                    t.history = [];
+                });
+                saveData();
+                renderLeaderboard();
+                closeModal('modal-teacher');
+                alert('Puntos del grupo reiniciados correctamente.');
+            }
+        }
+
+        function deleteCurrentGroup() {
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            if (!group) return;
+
+            if (confirm(`⚠️ ¿ELIMINAR DEFINITIVAMENTE el grupo "${group.name}" y todos sus equipos?`)) {
+                appData.groups = appData.groups.filter(g => g.id !== group.id);
+                if (appData.groups.length > 0) {
+                    appData.currentGroupId = appData.groups[0].id;
+                } else {
+                    appData.currentGroupId = null;
+                }
+                saveData();
+                closeModal('modal-teacher');
+                navigateTo('dashboard');
+            }
+        }
+
+        function resetAllFactoryData() {
+            if (confirm('⚠️ ¿RESTABLECER TODO A LOS VALORES INICIALES? Se perderán todos los grupos creados.')) {
+                localStorage.removeItem('xp_team_battle_data');
+                appData.groups = JSON.parse(JSON.stringify(DEFAULT_GROUPS));
+                appData.currentGroupId = 'g3';
+                saveData();
+                closeModal('modal-teacher');
+                navigateTo('dashboard');
+            }
+        }
+
+        function showCelebrationModal(title, subtitle) {
+            document.getElementById('celebration-title').textContent = title;
+            document.getElementById('celebration-subtitle').textContent = subtitle;
+            document.getElementById('modal-celebration').classList.remove('hidden');
+        }
+
+
+        /* ==========================================================================
+           9. PROJECTOR MODE & EXPORT FUNCTIONS
+           ========================================================================== */
+
+        function openProjectorMode() {
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            if (!group) {
+                alert('Selecciona un grupo primero.');
+                return;
+            }
+            renderProjectorView();
+            document.getElementById('projector-overlay').classList.remove('hidden');
+        }
+
+        function closeProjectorMode() {
+            document.getElementById('projector-overlay').classList.add('hidden');
+        }
+
+        function renderProjectorView() {
+            const group = appData.groups.find(g => g.id === appData.currentGroupId);
+            if (!group) return;
+
+            document.getElementById('projector-group-name').textContent = group.name;
+
+            const list = document.getElementById('projector-teams-list');
+            list.innerHTML = '';
+
+            const sorted = [...group.teams].sort((a, b) => b.xp - a.xp);
+
+            sorted.forEach((team, index) => {
+                const rank = index + 1;
+                const levelInfo = getLevelInfo(team.xp);
+
+                let badge = `${rank}️⃣`;
+                if (rank === 1) badge = "🥇";
+                if (rank === 2) badge = "🥈";
+                if (rank === 3) badge = "🥉";
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/90 border border-slate-700/80 rounded-3xl p-5 flex items-center justify-between shadow-2xl";
+
+                card.innerHTML = `
+                    <div class="flex items-center space-x-6">
+                        <span class="text-4xl font-extrabold text-white w-12 text-center">${badge}</span>
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl bg-slate-800 border border-slate-700">
+                            ${team.emoji}
+                        </div>
+                        <div>
+                            <h3 class="game-title text-3xl font-extrabold text-white">${team.name}</h3>
+                            <div class="flex items-center space-x-2 mt-0.5">
+                                <span class="text-xs font-bold text-indigo-400">Level ${levelInfo.level}</span>
+                                ${team.members && team.members.length > 0 ? `<span class="text-slate-400 text-xs">• 👤 ${team.members.join(', ')}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-6">
+                        <div class="text-right">
+                            <p class="game-title text-4xl font-extrabold text-amber-400">${team.xp} <span class="text-xl text-slate-400">XP</span></p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="addXP('${team.id}', 10, 'Projector +10')" class="btn-bounce px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl text-lg shadow">+10</button>
+                            <button onclick="addXP('${team.id}', 20, 'Projector +20')" class="btn-bounce px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-lg shadow">+20</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        // CSV Export
+        function exportCSV() {
+            let csv = 'Group,Team,Members,XP,Level,Position\n';
+            appData.groups.forEach(group => {
+                const sorted = [...group.teams].sort((a, b) => b.xp - a.xp);
+                sorted.forEach((team, index) => {
+                    const level = getLevelInfo(team.xp).level;
+                    const membersList = (team.members || []).join('; ');
+                    csv += `"${group.name}","${team.name}","${membersList}",${team.xp},${level},${index + 1}\n`;
+                });
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `XP_Team_Battle_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+        }
+
+        // JSON Export
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const a = document.createElement('a');
+            a.href = dataStr;
+            a.download = `XP_Team_Battle_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+        }
+
+        // Keyboard shortcuts (ESC for modal)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeProjectorMode();
+                closeModal('modal-custom-xp');
+                closeModal('modal-history');
+                closeModal('modal-team-form');
+                closeModal('modal-group-form');
+                closeModal('modal-teacher');
+                closeModal('modal-celebration');
+            }
+        });
+
+
+        /* ==========================================================================
+           10. INITIALIZATION
+           ========================================================================== */
+
+        window.onload = function () {
+            loadData();
+            navigateTo('dashboard');
+        };
+    </script>
+</body>
+</html>
